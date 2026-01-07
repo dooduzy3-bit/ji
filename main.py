@@ -13,15 +13,17 @@ st.title("📌 목일중학교 게시판")
 
 DATA_FILE = "posts.csv"
 
-# 게시글 파일 없으면 생성
+# 파일 생성
 if not os.path.exists(DATA_FILE):
     df = pd.DataFrame(columns=["제목", "내용", "작성자", "작성일"])
     df.to_csv(DATA_FILE, index=False)
 
-# 데이터 불러오기
 df = pd.read_csv(DATA_FILE)
 
-menu = st.sidebar.selectbox("메뉴", ["게시글 보기", "게시글 작성"])
+menu = st.sidebar.selectbox(
+    "메뉴",
+    ["게시글 보기", "게시글 작성", "내 글 수정/삭제"]
+)
 
 # -----------------------
 # 게시글 보기
@@ -59,8 +61,55 @@ elif menu == "게시글 작성":
             }
             df = pd.concat([df, pd.DataFrame([new_post])], ignore_index=True)
             df.to_csv(DATA_FILE, index=False)
-
             st.success("게시글이 등록되었습니다!")
             st.experimental_rerun()
         else:
             st.warning("모든 항목을 입력해주세요.")
+
+# -----------------------
+# 내 글 수정 / 삭제
+# -----------------------
+elif menu == "내 글 수정/삭제":
+    st.subheader("🛠 내 글 수정 / 삭제")
+
+    my_name = st.text_input("작성자 이름을 입력하세요")
+
+    my_posts = df[df["작성자"] == my_name]
+
+    if my_name == "":
+        st.info("이름을 입력해주세요.")
+    elif my_posts.empty:
+        st.warning("작성한 글이 없습니다.")
+    else:
+        post_index = st.selectbox(
+            "수정/삭제할 글 선택",
+            my_posts.index,
+            format_func=lambda x: df.loc[x, "제목"]
+        )
+
+        new_title = st.text_input(
+            "제목 수정",
+            df.loc[post_index, "제목"]
+        )
+        new_content = st.text_area(
+            "내용 수정",
+            df.loc[post_index, "내용"],
+            height=150
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("수정하기"):
+                df.loc[post_index, "제목"] = new_title
+                df.loc[post_index, "내용"] = new_content
+                df.to_csv(DATA_FILE, index=False)
+                st.success("게시글이 수정되었습니다!")
+                st.experimental_rerun()
+
+        with col2:
+            if st.button("삭제하기"):
+                df = df.drop(post_index)
+                df.to_csv(DATA_FILE, index=False)
+                st.success("게시글이 삭제되었습니다!")
+                st.experimental_rerun()

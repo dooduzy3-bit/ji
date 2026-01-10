@@ -1,67 +1,85 @@
 import streamlit as st
-from datetime import datetime
 
-st.set_page_config(page_title="학교 게시판", layout="centered")
-st.title("🏫 학교 게시판")
+st.set_page_config(page_title="게임 로그인", layout="wide")
 
-# =====================
-# 비밀번호 설정
-# =====================
-PASSWORD = "1234"
+# =========================
+# 세션 상태 초기화
+# =========================
+if "users" not in st.session_state:
+    st.session_state.users = {"admin": "1234"}  # 기본 계정
 
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-# 비밀번호 입력 화면
-if not st.session_state.authenticated:
-    st.subheader("🔒 비밀번호를 입력하세요")
-    pw = st.text_input("비밀번호", type="password")
+if "page" not in st.session_state:
+    st.session_state.page = "login"  # login or signup
 
-    if st.button("확인"):
-        if pw == PASSWORD:
-            st.session_state.authenticated = True
-            st.success("접속 성공!")
-            st.rerun()
+# =========================
+# 우측 상단 회원가입 버튼
+# =========================
+col1, col2 = st.columns([8, 2])
+
+with col2:
+    if st.button("회원가입"):
+        st.session_state.page = "signup"
+
+st.markdown("---")
+
+# =========================
+# 로그인 페이지
+# =========================
+if st.session_state.page == "login" and not st.session_state.logged_in:
+    st.title("🎮 게임 로그인")
+
+    username = st.text_input("아이디")
+    password = st.text_input("비밀번호", type="password")
+
+    if st.button("로그인"):
+        if username in st.session_state.users:
+            if st.session_state.users[username] == password:
+                st.session_state.logged_in = True
+                st.success("로그인 성공!")
+                st.rerun()
+            else:
+                st.error("비밀번호가 틀렸습니다.")
         else:
-            st.error("비밀번호가 틀렸습니다.")
+            st.error("존재하지 않는 아이디입니다.")
 
-    st.stop()  # 인증 전에는 아래 코드 실행 안 됨
+# =========================
+# 회원가입 페이지
+# =========================
+elif st.session_state.page == "signup":
+    st.title("📝 회원가입")
 
-# =====================
-# 게시판 로직
-# =====================
+    new_username = st.text_input("새 아이디")
+    new_password = st.text_input("새 비밀번호", type="password")
+    confirm_password = st.text_input("비밀번호 확인", type="password")
 
-# 게시글 저장 (세션)
-if "posts" not in st.session_state:
-    st.session_state.posts = []
+    if st.button("가입하기"):
+        if not new_username or not new_password:
+            st.warning("모든 항목을 입력해주세요.")
+        elif new_username in st.session_state.users:
+            st.error("이미 존재하는 아이디입니다.")
+        elif new_password != confirm_password:
+            st.error("비밀번호가 일치하지 않습니다.")
+        else:
+            st.session_state.users[new_username] = new_password
+            st.success("회원가입 완료! 로그인 해주세요.")
+            st.session_state.page = "login"
+            st.rerun()
 
-# 사이드바 - 글 작성
-st.sidebar.header("✏️ 글 작성")
+    if st.button("로그인으로 돌아가기"):
+        st.session_state.page = "login"
+        st.rerun()
 
-title = st.sidebar.text_input("제목")
-author = st.sidebar.text_input("작성자")
-content = st.sidebar.text_area("내용")
+# =========================
+# 로그인 성공 후 화면
+# =========================
+elif st.session_state.logged_in:
+    st.title("✅ 로그인 완료")
+    st.write("게임 로비로 이동할 준비 완료!")
 
-if st.sidebar.button("등록"):
-    if title and author and content:
-        st.session_state.posts.append({
-            "title": title,
-            "author": author,
-            "content": content,
-            "date": datetime.now().strftime("%Y-%m-%d %H:%M")
-        })
-        st.sidebar.success("게시글이 등록되었습니다!")
-    else:
-        st.sidebar.warning("모든 항목을 입력해주세요.")
-
-st.divider()
-
-# 게시글 목록
-st.subheader("📋 게시글 목록")
-
-if not st.session_state.posts:
-    st.info("아직 게시글이 없습니다.")
-else:
-    for post in reversed(st.session_state.posts):
-        with st.expander(f"{post['title']} | {post['author']} ({post['date']})"):
-            st.write(post["content"])
+    if st.button("로그아웃"):
+        st.session_state.logged_in = False
+        st.session_state.page = "login"
+        st.rerun()

@@ -14,6 +14,13 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"  # login, signup, lobby, settings
 
+# 사운드 설정
+if "bgm_volume" not in st.session_state:
+    st.session_state.bgm_volume = 50
+
+if "sfx_volume" not in st.session_state:
+    st.session_state.sfx_volume = 50
+
 
 # =========================
 # 상단 메뉴 (우측 버튼)
@@ -94,13 +101,17 @@ elif st.session_state.page == "lobby" and st.session_state.logged_in:
     st.write("- 멀티플레이")
     st.write("- 캐릭터 선택")
 
+    st.markdown("### 🔊 현재 사운드 설정")
+    st.write(f"🎵 배경음악: {st.session_state.bgm_volume}%")
+    st.write(f"🔊 효과음: {st.session_state.sfx_volume}%")
+
     if st.button("로그아웃"):
         st.session_state.logged_in = False
         st.session_state.page = "login"
         st.rerun()
 
 # =========================
-# 설정 페이지 (검은 화면)
+# 설정 페이지
 # =========================
 elif st.session_state.page == "settings" and st.session_state.logged_in:
     st.markdown(
@@ -108,13 +119,39 @@ elif st.session_state.page == "settings" and st.session_state.logged_in:
         <style>
         .settings-screen {
             background-color: black;
+            padding: 30px;
             height: 80vh;
-            border-radius: 10px;
+            border-radius: 12px;
+            color: white;
         }
         </style>
-        <div class="settings-screen"></div>
+        <div class="settings-screen">
         """,
         unsafe_allow_html=True
     )
 
-    st.markdown("### ⚙️ 게임 설정 (추가 예정)")
+    st.markdown("## ⚙️ 게임 설정")
+
+    st.markdown("### 🔊 사운드 설정")
+
+    st.session_state.bgm_volume = st.slider(
+        "🎵 배경음악 볼륨",
+        0, 100,
+        st.session_state.bgm_volume
+    )
+
+    st.session_state.sfx_volume = st.slider(
+        "🔊 효과음 볼륨",
+        0, 100,
+        st.session_state.sfx_volume
+    )
+
+    st.markdown(
+        f"""
+        **현재 설정**
+        - 배경음악: {st.session_state.bgm_volume}%
+        - 효과음: {st.session_state.sfx_volume}%
+        """
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)

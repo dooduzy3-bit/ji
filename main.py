@@ -6,22 +6,31 @@ st.set_page_config(page_title="게임 로그인", layout="wide")
 # 세션 상태 초기화
 # =========================
 if "users" not in st.session_state:
-    st.session_state.users = {"admin": "1234"}  # 기본 계정
+    st.session_state.users = {"admin": "1234"}
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 if "page" not in st.session_state:
-    st.session_state.page = "login"  # login or signup
+    st.session_state.page = "login"  # login, signup, lobby, settings
+
 
 # =========================
-# 우측 상단 회원가입 버튼
+# 상단 메뉴 (우측 버튼)
 # =========================
 col1, col2 = st.columns([8, 2])
 
 with col2:
-    if st.button("회원가입"):
-        st.session_state.page = "signup"
+    if not st.session_state.logged_in:
+        if st.button("회원가입"):
+            st.session_state.page = "signup"
+    else:
+        if st.session_state.page == "lobby":
+            if st.button("⚙️ 설정"):
+                st.session_state.page = "settings"
+        elif st.session_state.page == "settings":
+            if st.button("⬅ 로비로"):
+                st.session_state.page = "lobby"
 
 st.markdown("---")
 
@@ -38,6 +47,7 @@ if st.session_state.page == "login" and not st.session_state.logged_in:
         if username in st.session_state.users:
             if st.session_state.users[username] == password:
                 st.session_state.logged_in = True
+                st.session_state.page = "lobby"
                 st.success("로그인 성공!")
                 st.rerun()
             else:
@@ -73,13 +83,38 @@ elif st.session_state.page == "signup":
         st.rerun()
 
 # =========================
-# 로그인 성공 후 화면
+# 게임 로비
 # =========================
-elif st.session_state.logged_in:
-    st.title("✅ 로그인 완료")
-    st.write("게임 로비로 이동할 준비 완료!")
+elif st.session_state.page == "lobby" and st.session_state.logged_in:
+    st.title("🏠 게임 로비")
+    st.write("게임을 시작하거나 설정으로 이동하세요.")
+
+    st.markdown("### 🎯 준비 중인 기능")
+    st.write("- 게임 시작")
+    st.write("- 멀티플레이")
+    st.write("- 캐릭터 선택")
 
     if st.button("로그아웃"):
         st.session_state.logged_in = False
         st.session_state.page = "login"
         st.rerun()
+
+# =========================
+# 설정 페이지 (검은 화면)
+# =========================
+elif st.session_state.page == "settings" and st.session_state.logged_in:
+    st.markdown(
+        """
+        <style>
+        .settings-screen {
+            background-color: black;
+            height: 80vh;
+            border-radius: 10px;
+        }
+        </style>
+        <div class="settings-screen"></div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown("### ⚙️ 게임 설정 (추가 예정)")
